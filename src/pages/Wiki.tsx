@@ -35,7 +35,7 @@ import {
   Users,
   Wrench,
 } from 'lucide-react';
-import { localDatabase } from '../lib/localDatabase';
+import { getWikiData } from '../lib/wikiApi';
 import type { Category, WikiArticle } from '../types';
 import { cn } from '../lib/utils';
 
@@ -373,7 +373,7 @@ export function Wiki() {
 
     try {
       const result = await Promise.race([
-        localDatabase.getWikiData(),
+        getWikiData(),
         new Promise<null>(resolve => {
           window.setTimeout(() => resolve(null), 1800);
         }),

@@ -269,4 +269,74 @@ insert into categories (name, description, icon, color, type) values
   ('RH', 'Processos de RH', 'Users', '#ca8a04', 'wiki')
 on conflict (name, type) do update set description = excluded.description, icon = excluded.icon, color = excluded.color;
 
+insert into users (name, email, photo_url, department_id, position, status, role_id, admission_date)
+select seed.name, seed.email, seed.photo_url, departments.id, seed.position, 'active', roles.id, seed.admission_date::date
+from (
+  values
+    ('Ana Beatriz Santos', 'ana.beatriz@nextelecom.com.br', 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150', 'Recursos Humanos', 'Gestora de RH', 'Gestor', '2022-03-15'),
+    ('Lucas Alves', 'lucas.alves@nextelecom.com.br', 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150', 'Suporte Tecnico', 'Tecnico de Suporte', 'Colaborador', '2023-01-10'),
+    ('Mariana Costa', 'mariana.costa@nextelecom.com.br', 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150', 'NOC', 'Analista de NOC', 'Editor', '2021-07-20'),
+    ('Pedro Henrique', 'pedro.henrique@nextelecom.com.br', 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150', 'Comercial', 'Gerente Comercial', 'Administrador', '2020-05-01'),
+    ('Fernanda Lima', 'fernanda.lima@nextelecom.com.br', 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=150', 'Financeiro', 'Analista Financeira', 'Colaborador', '2022-11-15'),
+    ('Rafael Souza', 'rafael.souza@nextelecom.com.br', 'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=150', 'Infraestrutura', 'Engenheiro de Infraestrutura', 'Editor', '2021-02-01')
+) as seed(name, email, photo_url, department_name, position, role_name, admission_date)
+join departments on departments.name = seed.department_name
+join roles on roles.name = seed.role_name
+on conflict (email) do update set
+  name = excluded.name,
+  photo_url = excluded.photo_url,
+  department_id = excluded.department_id,
+  position = excluded.position,
+  status = excluded.status,
+  role_id = excluded.role_id,
+  admission_date = excluded.admission_date;
+
+insert into wiki_articles (title, slug, content, category_id, author_id, status, tags)
+select seed.title, seed.slug, seed.content, categories.id, users.id, 'published', seed.tags
+from (
+  values
+    (
+      'Procedimento de Atendimento ao Cliente',
+      'procedimento-atendimento-cliente',
+      E'# Procedimento de Atendimento ao Cliente\n\n## Objetivo\nPadronizar o atendimento ao cliente garantindo qualidade e eficiencia.\n\n## Fluxo de Atendimento\n\n1. Saudacao inicial: cumprimentar o cliente de forma cordial\n2. Identificacao: solicitar CPF/CNPJ e confirmar dados\n3. Diagnostico: ouvir e entender a solicitacao do cliente\n4. Resolucao: executar procedimento adequado\n5. Encerramento: confirmar resolucao e despedir-se\n\n## Pontos Importantes\n\n- Sempre manter tom profissional e empatico\n- Registrar todas as interacoes no sistema\n- Tempo maximo de espera: 3 minutos\n- Escalar para supervisor quando necessario',
+      'Atendimento',
+      'Ana Beatriz Santos',
+      array['atendimento', 'clientes', 'procedimentos']
+    ),
+    (
+      'Configuracao de OLT Huawei',
+      'configuracao-olt-huawei',
+      E'# Configuracao de OLT Huawei\n\n## Requisitos\n- Acesso SSH a OLT\n- Credenciais de administrador\n- Manual do equipamento\n\n## Procedimento\n\n### 1. Acesso ao Equipamento\n```bash\nssh admin@192.168.1.1\n```\n\n### 2. Configuracao de VLAN\n```text\nvlan 100 smart\nport vlan 100 0/0 0\n```\n\n## Troubleshooting\n- ONU nao registra: verificar serial number\n- Sem sinal: verificar atenuacao da fibra\n- Lentidao: verificar perfil de velocidade',
+      'Suporte Tecnico',
+      'Rafael Souza',
+      array['olt', 'gpon', 'huawei', 'configuracao']
+    ),
+    (
+      'Processo de Cobranca',
+      'processo-cobranca',
+      E'# Processo de Cobranca\n\n## Regua de Cobranca\n\n| Dias de Atraso | Acao |\n|---|---|\n| 1-5 dias | SMS automatico |\n| 6-10 dias | Ligacao ativa |\n| 11-20 dias | Suspensao do servico |\n| 21-30 dias | Negociacao especial |\n| +30 dias | Cobranca juridica |\n\n## Script de Negociacao\n\n1. Identificar o cliente\n2. Informar o valor em atraso\n3. Oferecer opcoes de parcelamento\n4. Registrar acordo no sistema\n5. Enviar confirmacao por e-mail',
+      'Financeiro',
+      'Fernanda Lima',
+      array['cobranca', 'inadimplencia', 'negociacao']
+    )
+) as seed(title, slug, content, category_name, author_name, tags)
+join categories on categories.name = seed.category_name and categories.type = 'wiki'
+join users on users.name = seed.author_name
+on conflict (slug) do update set
+  title = excluded.title,
+  content = excluded.content,
+  category_id = excluded.category_id,
+  author_id = excluded.author_id,
+  status = excluded.status,
+  tags = excluded.tags;
+
+insert into wiki_versions (article_id, content, editor_id, version_number)
+select wiki_articles.id, wiki_articles.content, wiki_articles.author_id, 1
+from wiki_articles
+where not exists (
+  select 1
+  from wiki_versions
+  where wiki_versions.article_id = wiki_articles.id
+);
+
 commit;

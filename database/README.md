@@ -24,8 +24,38 @@ psql -d rede_nex -f database/local_postgres_schema.sql
 
 O frontend nao deve conectar diretamente no SQL. O navegador conversa com uma API, e a API conversa com PostgreSQL, MySQL ou SQLite.
 
+## Como ligar o app ao PostgreSQL local
+
+1. Copie `.env.example` para `.env`.
+2. Ajuste `DATABASE_URL` com a senha do seu PostgreSQL:
+
+```env
+DATABASE_URL=postgres://postgres:SUA_SENHA@localhost:5432/rede_nex
+PORT=3333
+VITE_API_URL=http://localhost:3333/api
+```
+
+3. Em um terminal, inicie a API:
+
+```bash
+npm run api
+```
+
+4. Em outro terminal, inicie o app:
+
+```bash
+npm run dev
+```
+
+5. Teste a API:
+
+```text
+http://localhost:3333/api/health
+http://localhost:3333/api/wiki/categories
+http://localhost:3333/api/wiki/articles
+```
+
 ## Observacoes
 
 - Supabase foi removido do projeto.
-- O app agora usa `src/lib/localDatabase.ts` como fonte local temporaria de dados.
-- O proximo passo recomendado e criar uma API Node/Express ou Fastify usando este schema.
+- A Wiki usa a API local em `server/src/server.js` e volta para `src/lib/localDatabase.ts` se a API estiver desligada.
