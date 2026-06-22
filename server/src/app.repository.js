@@ -15,6 +15,11 @@ const userSelect = `
     u.role_id,
     u.admission_date,
     u.last_seen_at,
+    u.bitrix_id,
+    u.bitrix_department,
+    u.bitrix_active,
+    u.bitrix_last_sync_at,
+    u.source,
     u.created_at,
     u.updated_at,
     case

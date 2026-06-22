@@ -59,6 +59,10 @@ npm run dev
 GET  /api/health
 GET  /api/dashboard
 GET  /api/users
+GET  /api/integrations/bitrix/users
+GET  /api/integrations/bitrix/imports
+POST /api/integrations/bitrix/users/import
+POST /api/integrations/bitrix/users/sync
 GET  /api/departments
 GET  /api/trainings
 GET  /api/feed/posts
@@ -88,3 +92,7 @@ As telas tentam usar a API local primeiro. Se a API estiver desligada, o app usa
 npm run build
 npm run lint
 ```
+
+## Importar Usuarios Do Bitrix
+
+Veja [docs/integrations/bitrix-users.md](docs/integrations/bitrix-users.md).

@@ -2,6 +2,8 @@ import { createServer } from 'node:http';
 import { URL } from 'node:url';
 import './env.js';
 import { pool } from './db.js';
+import { fetchBitrixUsers } from './bitrix.client.js';
+import { importBitrixUsers, listBitrixImports, listBitrixUsers } from './bitrix.repository.js';
 import {
   createFeedPost,
   getDashboardData,
@@ -84,6 +86,28 @@ async function route(req, res) {
 
     if (req.method === 'GET' && path === '/api/users') {
       return sendJson(res, 200, { data: await listUsers() });
+    }
+
+    if (req.method === 'GET' && path === '/api/integrations/bitrix/users') {
+      return sendJson(res, 200, { data: await listBitrixUsers() });
+    }
+
+    if (req.method === 'GET' && path === '/api/integrations/bitrix/imports') {
+      return sendJson(res, 200, { data: await listBitrixImports() });
+    }
+
+    if (path === '/api/integrations/bitrix/users/import' && req.method === 'POST') {
+      const payload = await readJson(req);
+      const users = Array.isArray(payload) ? payload : payload.users;
+      if (!Array.isArray(users)) {
+        return sendError(res, 400, 'VALIDATION_ERROR', 'Envie um array de usuarios ou { "users": [...] }');
+      }
+      return sendJson(res, 201, { data: await importBitrixUsers(users, payload.source || 'manual') });
+    }
+
+    if (path === '/api/integrations/bitrix/users/sync' && req.method === 'POST') {
+      const users = await fetchBitrixUsers();
+      return sendJson(res, 201, { data: await importBitrixUsers(users, 'webhook') });
     }
 
     if (req.method === 'GET' && path === '/api/departments') {

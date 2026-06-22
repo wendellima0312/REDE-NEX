@@ -33,9 +33,32 @@ create table if not exists users (
   role_id uuid references roles(id) on delete set null,
   admission_date date,
   last_seen_at timestamptz,
+  bitrix_id text unique,
+  bitrix_department text,
+  bitrix_active boolean not null default true,
+  bitrix_last_sync_at timestamptz,
+  source text not null default 'local' check (source in ('local', 'bitrix', 'manual')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table users add column if not exists bitrix_id text unique;
+alter table users add column if not exists bitrix_department text;
+alter table users add column if not exists bitrix_active boolean not null default true;
+alter table users add column if not exists bitrix_last_sync_at timestamptz;
+alter table users add column if not exists source text not null default 'local';
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'users_source_check'
+      and conrelid = 'users'::regclass
+  ) then
+    alter table users add constraint users_source_check check (source in ('local', 'bitrix', 'manual'));
+  end if;
+end $$;
 
 create table if not exists categories (
   id uuid primary key default gen_random_uuid(),
@@ -195,6 +218,16 @@ create table if not exists permissions (
   unique (role_id, module, action)
 );
 
+create table if not exists bitrix_user_imports (
+  id uuid primary key default gen_random_uuid(),
+  source text not null default 'manual' check (source in ('csv', 'json', 'webhook', 'manual')),
+  total_received integer not null default 0,
+  total_imported integer not null default 0,
+  total_skipped integer not null default 0,
+  payload jsonb,
+  created_at timestamptz not null default now()
+);
+
 create or replace function set_updated_at()
 returns trigger
 language plpgsql
@@ -222,6 +255,8 @@ create trigger wiki_articles_set_updated_at before update on wiki_articles for e
 
 create index if not exists users_department_idx on users(department_id);
 create index if not exists users_role_idx on users(role_id);
+create index if not exists users_bitrix_id_idx on users(bitrix_id);
+create index if not exists users_source_idx on users(source);
 create index if not exists posts_author_idx on posts(author_id);
 create index if not exists posts_created_at_idx on posts(created_at desc);
 create index if not exists posts_community_idx on posts(community_id);
