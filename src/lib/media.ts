@@ -1,5 +1,3 @@
-import { supabase } from './supabase';
-
 export type MediaBucket = 'avatars' | 'post-media' | 'wiki-attachments' | 'training-media';
 export type MediaContext = 'avatar' | 'cover' | 'post' | 'wiki' | 'training' | 'general';
 
@@ -35,41 +33,19 @@ export async function uploadMedia({
   const folder = ownerId || 'shared';
   const path = `${context}/${folder}/${crypto.randomUUID()}-${safeFileName(file.name)}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from(bucket)
-    .upload(path, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
-
-  if (uploadError) {
-    throw uploadError;
-  }
-
-  const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(path);
-  const publicUrl = publicUrlData.publicUrl;
-
-  const { data, error } = await supabase
-    .from('media_assets')
-    .insert({
-      bucket,
-      path,
-      public_url: publicUrl,
-      file_name: file.name,
-      file_type: file.type,
-      file_size: file.size,
-      owner_id: ownerId,
-      context,
-      post_id: postId,
-      wiki_article_id: wikiArticleId,
-      training_id: trainingId,
-    })
-    .select('*')
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  return {
+    id: crypto.randomUUID(),
+    bucket,
+    path,
+    public_url: URL.createObjectURL(file),
+    file_name: file.name,
+    file_type: file.type,
+    file_size: file.size,
+    owner_id: ownerId,
+    context,
+    post_id: postId,
+    wiki_article_id: wikiArticleId,
+    training_id: trainingId,
+    created_at: new Date().toISOString(),
+  };
 }

@@ -3,7 +3,7 @@ import {
   Users as UsersIcon, Search, Grid3X3, List, Plus,
   Mail, Building2, ChevronRight, UserCheck, UserX,
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { localDatabase } from '../lib/localDatabase';
 import { Card } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
 
@@ -45,16 +45,13 @@ export function Users() {
   }, []);
 
   async function loadData() {
-    const [usersRes, deptsRes] = await Promise.all([
-      supabase
-        .from('users')
-        .select('id, name, email, photo_url, position, status, admission_date, departments(name), roles(name)')
-        .order('name'),
-      supabase.from('departments').select('id, name').order('name'),
+    const [nextUsers, nextDepartments] = await Promise.all([
+      localDatabase.getUsers(),
+      localDatabase.getDepartments(),
     ]);
 
-    if (usersRes.data) setUsers(usersRes.data as unknown as UserRow[]);
-    if (deptsRes.data) setDepartments(deptsRes.data);
+    setUsers(nextUsers as unknown as UserRow[]);
+    setDepartments(nextDepartments);
     setLoading(false);
   }
 

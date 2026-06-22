@@ -35,7 +35,7 @@ import {
   Users,
   Wrench,
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { localDatabase } from '../lib/localDatabase';
 import type { Category, WikiArticle } from '../types';
 import { cn } from '../lib/utils';
 
@@ -373,22 +373,14 @@ export function Wiki() {
 
     try {
       const result = await Promise.race([
-        Promise.all([
-          supabase.from('categories').select('*').eq('type', 'wiki').order('name'),
-          supabase
-            .from('wiki_articles')
-            .select('*, categories(name, color), users(name, photo_url)')
-            .eq('status', 'published')
-            .order('updated_at', { ascending: false }),
-        ]),
+        localDatabase.getWikiData(),
         new Promise<null>(resolve => {
           window.setTimeout(() => resolve(null), 1800);
         }),
       ]);
 
-      const [catsRes, articlesRes] = result ?? [{ data: fallbackCategories }, { data: fallbackArticles }];
-      const dbCats: Category[] = catsRes.data ?? [];
-      const dbArticles = (articlesRes.data ?? []) as unknown as WikiArticle[];
+      const dbCats: Category[] = result?.categories ?? [];
+      const dbArticles = (result?.articles ?? []) as unknown as WikiArticle[];
       const useFallback = dbCats.length === 0 && dbArticles.length === 0;
       const cats = useFallback ? fallbackCategories : dbCats;
       const articles = useFallback ? fallbackArticles : dbArticles;

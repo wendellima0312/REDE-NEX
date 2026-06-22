@@ -5,7 +5,7 @@ import {
   TrendingUp, Bell, AlertCircle, ChevronRight, ArrowUpRight,
   CheckCircle2, Activity, Target, BarChart3,
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { localDatabase } from '../lib/localDatabase';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
@@ -167,17 +167,7 @@ export function Dashboard() {
     async function loadData() {
       try {
         const result = await Promise.race([
-          Promise.all([
-            supabase.from('users').select('id', { count: 'exact', head: true }),
-            supabase.from('trainings').select('id', { count: 'exact', head: true }).eq('status', 'published'),
-            supabase.from('wiki_articles').select('id', { count: 'exact', head: true }).eq('status', 'published'),
-            supabase.from('posts').select('id', { count: 'exact', head: true }),
-            supabase
-              .from('posts')
-              .select('id, title, content, type, created_at, users(name, photo_url, position)')
-              .order('created_at', { ascending: false })
-              .limit(5),
-          ]),
+          localDatabase.getDashboardData(),
           new Promise<null>(resolve => {
             window.setTimeout(() => resolve(null), 1800);
           }),
@@ -189,20 +179,8 @@ export function Dashboard() {
           return;
         }
 
-        const [usersRes, trainingsRes, articlesRes, postsRes, recentPostsRes] = result;
-        const nextStats = {
-          users: usersRes.count ?? 0,
-          trainings: trainingsRes.count ?? 0,
-          articles: articlesRes.count ?? 0,
-          posts: postsRes.count ?? 0,
-        };
-
-        setStats(Object.values(nextStats).some(Boolean) ? nextStats : fallbackStats);
-        setRecentPosts(
-          recentPostsRes.data?.length
-            ? recentPostsRes.data as unknown as RecentPost[]
-            : fallbackRecentPosts
-        );
+        setStats(Object.values(result.stats).some(Boolean) ? result.stats : fallbackStats);
+        setRecentPosts(result.recentPosts.length ? result.recentPosts as unknown as RecentPost[] : fallbackRecentPosts);
       } catch {
         setStats(fallbackStats);
         setRecentPosts(fallbackRecentPosts);

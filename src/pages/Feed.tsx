@@ -35,7 +35,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { localDatabase } from '../lib/localDatabase';
 import { Textarea } from '../components/ui/textarea';
 import {
   DropdownMenu,
@@ -271,17 +271,13 @@ export function Feed() {
 
     try {
       const result = await Promise.race([
-        supabase
-          .from('posts')
-          .select('*, users(id, name, photo_url, position, departments(name)), likes(id, user_id), comments(id, content, created_at, users(name, photo_url))')
-          .order('pinned', { ascending: false })
-          .order('created_at', { ascending: false }),
+        localDatabase.getFeedPosts(),
         new Promise<null>(resolve => {
           window.setTimeout(() => resolve(null), 1800);
         }),
       ]);
 
-      const data = result?.data as Post[] | undefined;
+      const data = result as Post[] | undefined;
       setPosts(data?.length ? data.map(normalizePost) : fallbackPosts);
     } catch {
       setPosts(fallbackPosts);
@@ -363,14 +359,7 @@ export function Feed() {
     setComposeText('');
     setComposing(false);
 
-    try {
-      const { data: author } = await supabase.from('users').select('id').limit(1).single();
-      if (author) {
-        await supabase.from('posts').insert({ content: localPost.content, type: localPost.type, author_id: author.id });
-      }
-    } catch {
-      // Keeps the local social interaction responsive when the backend is unavailable.
-    }
+    await localDatabase.createPost(localPost.content, localPost.type);
   }
 
   const filtered = useMemo(() => {

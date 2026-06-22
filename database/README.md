@@ -1,27 +1,31 @@
 # Rede Nex Database
 
-SQL versionado para provisionar o banco da plataforma Rede Nex.
+SQL local versionado para provisionar o banco da plataforma Rede Nex.
 
 ## Arquivos
 
-- `rede_nex_full_setup.sql`: script consolidado para Supabase/PostgreSQL com extensoes, tabelas, indices, triggers, RLS, storage buckets e dados iniciais.
+- `local_postgres_schema.sql`: schema PostgreSQL local com tabelas, indices, triggers e dados iniciais.
 
-## Como executar no Supabase
+## Como executar localmente com PostgreSQL
 
-1. Abra o projeto no Supabase.
-2. Acesse `SQL Editor`.
-3. Cole e execute o conteudo de `rede_nex_full_setup.sql`.
-4. Configure no `.env` local:
+1. Crie o banco:
 
-```env
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
+```bash
+createdb rede_nex
 ```
 
-O script foi escrito para ser idempotente: pode ser executado novamente para reparar estrutura, policies e seeds principais sem duplicar os registros com chave unica.
+2. Execute o schema:
+
+```bash
+psql -d rede_nex -f database/local_postgres_schema.sql
+```
+
+3. Configure uma API local para expor esse banco ao frontend.
+
+O frontend nao deve conectar diretamente no SQL. O navegador conversa com uma API, e a API conversa com PostgreSQL, MySQL ou SQLite.
 
 ## Observacoes
 
-- As migrations originais continuam em `supabase/migrations`.
-- O arquivo consolidado e a referencia mais simples para hospedar, revisar e recriar o banco pelo GitHub.
-- As policies atuais liberam CRUD para usuarios autenticados, mantendo a mesma regra usada pela aplicacao neste estagio.
+- Supabase foi removido do projeto.
+- O app agora usa `src/lib/localDatabase.ts` como fonte local temporaria de dados.
+- O proximo passo recomendado e criar uma API Node/Express ou Fastify usando este schema.

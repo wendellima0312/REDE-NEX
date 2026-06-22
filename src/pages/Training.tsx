@@ -4,7 +4,7 @@ import {
   TrendingUp, CheckCircle2, Award, Star,
   Wrench, Network, DollarSign, Headphones, Server, Users,
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { localDatabase } from '../lib/localDatabase';
 import { Card } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
 import { Progress } from '../components/ui/progress';
@@ -45,29 +45,16 @@ export function Training() {
   }, []);
 
   async function loadData() {
-    const [trainingsRes, catsRes] = await Promise.all([
-      supabase
-        .from('trainings')
-        .select('*, categories(id, name, color), users(name, photo_url)')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('categories')
-        .select('*')
-        .eq('type', 'training')
-        .order('name'),
-    ]);
+    const data = await localDatabase.getTrainingData();
 
-    if (trainingsRes.data) {
-      setTrainings(
-        (trainingsRes.data as Training[]).map((t) => ({
-          ...t,
-          _progress: Math.floor(Math.random() * 101),
-          _completed: Math.random() > 0.6,
-        }))
-      );
-    }
-    if (catsRes.data) setCategories(catsRes.data);
+    setTrainings(
+      data.trainings.map((t) => ({
+        ...t,
+        _progress: Math.floor(Math.random() * 101),
+        _completed: Math.random() > 0.6,
+      }))
+    );
+    setCategories(data.categories);
     setLoading(false);
   }
 
