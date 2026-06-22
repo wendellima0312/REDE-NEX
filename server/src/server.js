@@ -3,6 +3,14 @@ import { URL } from 'node:url';
 import './env.js';
 import { pool } from './db.js';
 import {
+  createFeedPost,
+  getDashboardData,
+  getTrainingData,
+  listDepartments,
+  listFeedPosts,
+  listUsers,
+} from './app.repository.js';
+import {
   archiveArticle,
   createArticle,
   createCategory,
@@ -68,6 +76,32 @@ async function route(req, res) {
     if (req.method === 'GET' && path === '/api/health') {
       await pool.query('select 1');
       return sendJson(res, 200, { status: 'ok', service: 'rede-nex-api' });
+    }
+
+    if (req.method === 'GET' && path === '/api/dashboard') {
+      return sendJson(res, 200, { data: await getDashboardData() });
+    }
+
+    if (req.method === 'GET' && path === '/api/users') {
+      return sendJson(res, 200, { data: await listUsers() });
+    }
+
+    if (req.method === 'GET' && path === '/api/departments') {
+      return sendJson(res, 200, { data: await listDepartments() });
+    }
+
+    if (req.method === 'GET' && path === '/api/trainings') {
+      return sendJson(res, 200, { data: await getTrainingData() });
+    }
+
+    if (path === '/api/feed/posts') {
+      if (req.method === 'GET') return sendJson(res, 200, { data: await listFeedPosts() });
+      if (req.method === 'POST') {
+        const payload = await readJson(req);
+        const error = validateRequired(payload, ['content']);
+        if (error) return sendError(res, 400, 'VALIDATION_ERROR', error);
+        return sendJson(res, 201, { data: await createFeedPost(payload) });
+      }
     }
 
     if (path === '/api/wiki/categories') {

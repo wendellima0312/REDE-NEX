@@ -4,7 +4,7 @@ import {
   TrendingUp, CheckCircle2, Award, Star,
   Wrench, Network, DollarSign, Headphones, Server, Users,
 } from 'lucide-react';
-import { localDatabase } from '../lib/localDatabase';
+import { getTrainingData } from '../lib/appApi';
 import { Card } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
 import { Progress } from '../components/ui/progress';
@@ -45,7 +45,7 @@ export function Training() {
   }, []);
 
   async function loadData() {
-    const data = await localDatabase.getTrainingData();
+    const data = await getTrainingData();
 
     setTrainings(
       data.trainings.map((t) => ({

@@ -53,9 +53,13 @@ npm run dev
 http://localhost:3333/api/health
 http://localhost:3333/api/wiki/categories
 http://localhost:3333/api/wiki/articles
+http://localhost:3333/api/dashboard
+http://localhost:3333/api/feed/posts
+http://localhost:3333/api/users
+http://localhost:3333/api/trainings
 ```
 
 ## Observacoes
 
 - Supabase foi removido do projeto.
-- A Wiki usa a API local em `server/src/server.js` e volta para `src/lib/localDatabase.ts` se a API estiver desligada.
+- As telas usam a API local em `server/src/server.js` e voltam para `src/lib/localDatabase.ts` se a API estiver desligada.

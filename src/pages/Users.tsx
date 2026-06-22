@@ -3,7 +3,7 @@ import {
   Users as UsersIcon, Search, Grid3X3, List, Plus,
   Mail, Building2, ChevronRight, UserCheck, UserX,
 } from 'lucide-react';
-import { localDatabase } from '../lib/localDatabase';
+import { getDepartments, getUsers } from '../lib/appApi';
 import { Card } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
 
@@ -46,8 +46,8 @@ export function Users() {
 
   async function loadData() {
     const [nextUsers, nextDepartments] = await Promise.all([
-      localDatabase.getUsers(),
-      localDatabase.getDepartments(),
+      getUsers(),
+      getDepartments(),
     ]);
 
     setUsers(nextUsers as unknown as UserRow[]);

@@ -35,7 +35,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import { localDatabase } from '../lib/localDatabase';
+import { createPost, getFeedPosts } from '../lib/appApi';
 import { Textarea } from '../components/ui/textarea';
 import {
   DropdownMenu,
@@ -271,7 +271,7 @@ export function Feed() {
 
     try {
       const result = await Promise.race([
-        localDatabase.getFeedPosts(),
+        getFeedPosts(),
         new Promise<null>(resolve => {
           window.setTimeout(() => resolve(null), 1800);
         }),
@@ -359,7 +359,7 @@ export function Feed() {
     setComposeText('');
     setComposing(false);
 
-    await localDatabase.createPost(localPost.content, localPost.type);
+    await createPost(localPost.content, localPost.type);
   }
 
   const filtered = useMemo(() => {

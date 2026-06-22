@@ -5,7 +5,7 @@ import {
   TrendingUp, Bell, AlertCircle, ChevronRight, ArrowUpRight,
   CheckCircle2, Activity, Target, BarChart3,
 } from 'lucide-react';
-import { localDatabase } from '../lib/localDatabase';
+import { getDashboardData } from '../lib/appApi';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
@@ -167,7 +167,7 @@ export function Dashboard() {
     async function loadData() {
       try {
         const result = await Promise.race([
-          localDatabase.getDashboardData(),
+          getDashboardData(),
           new Promise<null>(resolve => {
             window.setTimeout(() => resolve(null), 1800);
           }),

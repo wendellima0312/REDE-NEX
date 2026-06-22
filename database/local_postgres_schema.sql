@@ -291,6 +291,49 @@ on conflict (email) do update set
   role_id = excluded.role_id,
   admission_date = excluded.admission_date;
 
+insert into communities (name, description, icon, color)
+values
+  ('Atendimento', 'Troca de scripts, boas praticas e rotinas do atendimento.', 'MessageCircle', '#ff7a00'),
+  ('Suporte GPON', 'Configuracoes, incidentes e padroes tecnicos de suporte.', 'Zap', '#0057b8'),
+  ('Comercial B2B', 'Estrategias, oportunidades e acompanhamento comercial.', 'Briefcase', '#16a34a'),
+  ('Financeiro', 'Cobranca, negociacao e rotinas financeiras.', 'DollarSign', '#9333ea')
+on conflict (name) do update set
+  description = excluded.description,
+  icon = excluded.icon,
+  color = excluded.color;
+
+insert into trainings (title, description, category_id, level, status, duration_minutes, created_by)
+select seed.title, seed.description, categories.id, seed.level, 'published', seed.duration_minutes, users.id
+from (
+  values
+    ('Configuracao de ONU GPON', 'Aprenda a configurar equipamentos ONU para conexoes GPON de forma eficiente.', 'Suporte Tecnico', 'intermediate', 60, 'Rafael Souza'),
+    ('Monitoramento de Backbone', 'Tecnicas avancadas de monitoramento de backbone e deteccao de falhas.', 'NOC', 'advanced', 90, 'Mariana Costa'),
+    ('Tecnicas de Vendas Consultivas', 'Desenvolva habilidades de vendas consultivas para o mercado de telecomunicacoes.', 'Comercial', 'beginner', 45, 'Pedro Henrique'),
+    ('Configuracao de Mesh Wi-Fi', 'Instalacao e configuracao de sistemas Mesh Wi-Fi residencial e empresarial.', 'Suporte Tecnico', 'beginner', 30, 'Rafael Souza'),
+    ('Cobranca e Negociacao', 'Estrategias eficazes de cobranca e negociacao com clientes inadimplentes.', 'Financeiro', 'intermediate', 50, 'Fernanda Lima')
+) as seed(title, description, category_name, level, duration_minutes, creator_name)
+join categories on categories.name = seed.category_name and categories.type = 'training'
+join users on users.name = seed.creator_name
+on conflict (title) do update set
+  description = excluded.description,
+  category_id = excluded.category_id,
+  level = excluded.level,
+  status = excluded.status,
+  duration_minutes = excluded.duration_minutes,
+  created_by = excluded.created_by;
+
+insert into posts (author_id, title, content, type, pinned)
+select users.id, seed.title, seed.content, seed.type, seed.pinned
+from (
+  values
+    ('Pedro Henrique', 'Bem-vindos a Rede Nex!', 'Apresentamos a nova plataforma corporativa da Nex Telecom. A Rede Nex sera nosso espaco central para comunicacao, treinamento e compartilhamento de conhecimento.', 'announcement', true),
+    ('Lucas Alves', 'Parabens Ana Beatriz!', 'Desejamos muitas felicidades e saude para nossa colega Ana Beatriz. Que continue brilhando em tudo que faz!', 'message', false),
+    ('Mariana Costa', 'Manutencao Programada - NOC', 'Havera manutencao programada no backbone principal nesta sexta-feira, das 00h as 04h. Durante este periodo, pode haver instabilidade em algumas rotas.', 'alert', false),
+    ('Pedro Henrique', 'Meta de Vendas Superada!', 'A equipe comercial superou a meta de vendas. Um resultado excelente que demonstra comprometimento e dedicacao.', 'update', false)
+) as seed(author_name, title, content, type, pinned)
+join users on users.name = seed.author_name
+where not exists (select 1 from posts where posts.title = seed.title);
+
 insert into wiki_articles (title, slug, content, category_id, author_id, status, tags)
 select seed.title, seed.slug, seed.content, categories.id, users.id, 'published', seed.tags
 from (
