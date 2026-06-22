@@ -24,7 +24,7 @@ function truthyBitrix(value) {
 }
 
 function joinName(record) {
-  const fullName = clean(pick(record, ['FULL_NAME', 'full_name', 'Nome completo', 'Nome Completo', 'name']));
+  const fullName = clean(pick(record, ['FULL_NAME', 'full_name', 'nome_completo', 'Nome completo', 'Nome Completo', 'name']));
   if (fullName) return fullName;
 
   return [pick(record, ['NAME', 'Nome', 'first_name']), pick(record, ['LAST_NAME', 'Sobrenome', 'last_name'])]
@@ -47,6 +47,7 @@ export function normalizeBitrixUser(record) {
     'DEPARTMENT_NAME',
     'Departamento',
     'department',
+    'setor',
     'bitrix_department',
     'UF_DEPARTMENT_NAME',
     'UF_DEPARTMENT',
